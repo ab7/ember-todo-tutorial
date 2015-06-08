@@ -1,0 +1,40 @@
+import Ember from 'ember';
+
+export default Ember.Component.extend({
+  actions: {
+    createTodo: function(newTitle) {
+      this.set('newTitle', '');
+      this.sendAction('createTodo', newTitle);
+    },
+    clearCompleted: function() {
+      var completed = this.get('model').filterBy('isCompleted', true);
+      completed.invoke('deleteRecord');
+      completed.invoke('save');
+    }
+  },
+  remaining: Ember.computed('model.@each.isCompleted', function() {
+    var model = this.get('model');
+    return model.filterBy('isCompleted', false).get('length');
+  }),
+  inflection: Ember.computed('remaining', function() {
+    var remaining = this.get('remaining');
+    return (remaining === 1) ? 'item': 'items';
+  }),
+  hasCompleted: Ember.computed('completed', function() {
+    return this.get('completed') > 0;
+  }),
+  completed: Ember.computed('model.@each.isCompleted', function() {
+    var model = this.get('model');
+    return model.filterBy('isCompleted', true).get('length');
+  }),
+  allAreDone: function(key, value) {
+    console.log(key + ": " + value);
+    if (value === undefined) {
+      return this.get('length') > 0 && this.isEvery('isCompleted', true);
+    } else {
+      this.setEach('isCompleted', value);
+      this.invoke('save');
+      return value;
+    }
+  }.property('model.@each.isCompleted')
+});
